@@ -14,7 +14,7 @@
 //                           (lift the wheels off the table first!)
 //   RunMode::Drive        - normal remote-control driving
 enum class RunMode : uint8_t { ReceiverTest, MotorTest, Drive };
-constexpr RunMode RUN_MODE = RunMode::ReceiverTest;
+constexpr RunMode RUN_MODE = RunMode::Drive;
 
 constexpr unsigned long SERIAL_BAUD = 115200;   // Serial Monitor speed
 constexpr bool DEBUG_PRINT = true;              // print values while driving

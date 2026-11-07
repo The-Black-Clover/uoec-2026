@@ -2,7 +2,14 @@
 
 Remote-controlled robot for the uOEC 2026 Senior Design category.
 
-**Hardware:** Arduino Uno R3 (Elegoo), FlySky FS-i6X transmitter + FS-iA6B receiver (PWM output), L298N motor driver, 2 × TT geared drive motors, rear caster, fixed front pusher, 7.2 V NiMH battery.
+**Hardware:** Arduino Uno R3 (Elegoo), FlySky FS-i6X transmitter + FS-iA6B receiver (PWM output), L298N motor driver, 4 × TT geared motors with 6.5 cm wheels (skid steering: the two motors on each side are wired together to one L298N channel), 7.2 V NiMH battery, cardboard chassis.
+
+## Repository layout
+
+| Folder | What it is |
+|---|---|
+| `robot/` | The robot program (one Arduino sketch, split into modules). |
+| `rx_test/` | Minimal stand-alone sketch used first to check the radio link with `pulseIn()`. |
 
 ## Controls
 
@@ -39,7 +46,7 @@ Set `RUN_MODE` in `config.h`, then upload. Serial Monitor at **115200 baud**.
 
 | Mode | Use it to |
 |---|---|
-| `RunMode::ReceiverTest` | Check the radio link. Prints CH1/CH2 in µs (≈1000 / 1500 / 2000). Motors stay off. |
+| `RunMode::ReceiverTest` | Check the radio link. Prints CH1/CH2 in µs (≈1000 / 1500 / 2000) and the CH5/CH6 switch positions. Motors stay off. |
 | `RunMode::MotorTest` | Check motor wiring. Spins left then right motor forward and backward. **Lift the wheels first.** If a wheel turns the wrong way on a "forward" step, flip `INVERT_LEFT` / `INVERT_RIGHT`. |
 | `RunMode::Drive` | Normal driving with the right stick: up/down = forward/back, left/right = turn. |
 
@@ -58,10 +65,10 @@ Recommended order: ReceiverTest → MotorTest → Drive.
 Leave the 5V-regulator jumper on the L298N in place (battery is below 12 V).
 
 ### Motors
-| Motor | L298N |
+| Motors | L298N |
 |---|---|
-| Left red / black | OUT1 / OUT2 |
-| Right red / black | OUT3 / OUT4 |
+| Both left motors (in parallel) | OUT1 / OUT2 |
+| Both right motors (in parallel) | OUT3 / OUT4 |
 
 ### L298N control → Uno
 Remove the ENA and ENB jumper caps first.
