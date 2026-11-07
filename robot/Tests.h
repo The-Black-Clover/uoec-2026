@@ -6,8 +6,9 @@
 #include "Motor.h"
 
 namespace Tests {
-  // Prints CH1/CH2 pulse widths and stick values. Motors stay off.
-  void receiver(const RcChannel& steer, const RcChannel& throttle);
+  // Prints CH1/CH2 stick values and CH5/CH6 switch positions. Motors stay off.
+  void receiver(const RcChannel& steer, const RcChannel& throttle,
+                const RcChannel& arm, const RcChannel& speed);
 
   // Spins each motor forward then backward so you can check direction.
   // Lift the wheels off the table before running this!

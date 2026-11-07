@@ -27,6 +27,11 @@ namespace Pins {
   constexpr uint8_t RC_STEER    = 2;   // CH1 - right stick left/right
   constexpr uint8_t RC_THROTTLE = 3;   // CH2 - right stick up/down
 
+  // Switch channels. These MUST be on A0-A5: they use the Uno's
+  // pin-change interrupt, since D2/D3 are already taken by the sticks.
+  constexpr uint8_t RC_ARM   = A0;     // CH5 - switch SwA: arm / disarm motors
+  constexpr uint8_t RC_SPEED = A1;     // CH6 - switch SwC: 3 speed modes
+
   // L298N, channel A -> left motor (OUT1/OUT2)
   constexpr uint8_t LEFT_EN  = 5;      // ENA (PWM pin, jumper removed)
   constexpr uint8_t LEFT_IN1 = 7;
@@ -53,11 +58,38 @@ namespace RcConfig {
 
   // Ignore stick movement this close to centre (us), so the robot sits still.
   constexpr uint16_t DEADBAND_US = 25;
+
+  // Switch positions: below LOW_MAX = position 0, above HIGH_MIN = position 2,
+  // in between = position 1 (middle of a 3-position switch).
+  constexpr uint16_t SWITCH_LOW_MAX  = 1250;
+  constexpr uint16_t SWITCH_HIGH_MIN = 1750;
+}
+
+// ======================= Switches =======================
+namespace SwitchConfig {
+  // Arm switch (CH5). Motors can only run while it is in ARMED_POSITION.
+  // If CH5 has no signal (wire loose, channel not assigned) the robot
+  // stays disarmed: failing safe.
+  // Set USE_ARM_SWITCH = false to drive without it (e.g. before it is wired).
+  constexpr bool USE_ARM_SWITCH = true;
+  constexpr int  ARMED_POSITION = 2;       // 2 = switch down (~2000 us) on SwA
+
+  // Speed switch (CH6). Top speed in percent for each position of SwC.
+  // If CH6 has no signal, PRECISION is used (slowest = safest).
+  constexpr bool    USE_SPEED_SWITCH = true;
+  constexpr uint8_t SPEED_PERCENT[3] = {
+    40,    // position 0: PRECISION - docking, lining up on the box
+    70,    // position 1: NORMAL    - weaving past obstacles
+    100    // position 2: TURBO     - crossing open ground
+  };
+  constexpr uint8_t SPEED_WITHOUT_SWITCH = 100;   // used when USE_SPEED_SWITCH = false
 }
 
 // ======================= Driving =======================
 namespace DriveConfig {
-  // If a wheel spins backwards in MotorTest mode, flip its setting here.
+  // If a whole SIDE spins backwards in MotorTest mode, flip its setting here.
+  // If only ONE motor of a side fights the other (mounted the other way
+  // round), swap that motor's two wires at the L298N instead.
   constexpr bool INVERT_LEFT  = false;
   constexpr bool INVERT_RIGHT = false;
 
@@ -69,4 +101,17 @@ namespace DriveConfig {
   // How much the steering stick affects the wheels, in percent.
   // Lower it (e.g. 60) if turning is too twitchy.
   constexpr uint8_t STEER_PERCENT = 100;
+
+  // The drive loop runs at a fixed rate so ramping behaves the same
+  // no matter how fast the Uno loops.
+  constexpr unsigned long CONTROL_PERIOD_MS = 10;   // 100 updates per second
+
+  // Ramping: the most a wheel's speed (-255..255) may change per update.
+  // Speeding up gently stops wheelspin and keeps the box from sliding off;
+  // slowing down is allowed to be quicker so the robot still stops crisply.
+  //   RAMP_UP_STEP   8 -> 0 to full speed in ~0.3 s
+  //   RAMP_DOWN_STEP 20 -> full speed to 0 in ~0.13 s
+  // Signal loss and disarming skip the ramp and cut the motors at once.
+  constexpr uint8_t RAMP_UP_STEP   = 8;
+  constexpr uint8_t RAMP_DOWN_STEP = 20;
 }

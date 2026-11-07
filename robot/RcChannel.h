@@ -1,10 +1,14 @@
 /*
  * RcChannel - reads one PWM channel from the FlySky receiver
  * ----------------------------------------------------------
- * Uses a hardware interrupt to time each pulse in the background,
- * so reading a channel never blocks the program (unlike pulseIn()).
+ * Times each pulse in the background with an interrupt, so reading a
+ * channel never blocks the program (unlike pulseIn()).
  *
- * Only works on pins D2 and D3 of an Uno (its interrupt pins).
+ * Two kinds of interrupt are used, depending on the pin:
+ *   D2, D3   : external interrupts INT0 / INT1 (attachInterrupt)
+ *   A0 - A5  : pin-change interrupt PCINT1 (one shared interrupt for
+ *              the whole analog port; the ISR works out which pin moved)
+ * Any other pin is rejected by begin().
  */
 #pragma once
 #include <Arduino.h>
@@ -13,7 +17,7 @@ class RcChannel {
 public:
   explicit RcChannel(uint8_t pin);
 
-  // Start listening. Returns false if the pin can't do interrupts.
+  // Start listening. Returns false if the pin can't be used.
   bool begin();
 
   // True if a valid pulse arrived recently.
@@ -26,12 +30,15 @@ public:
   // 0 inside the deadband or when there is no signal.
   int value() const;
 
-private:
-  void onEdge();               // called on every rising/falling edge
-  static void isrInt0();
-  static void isrInt1();
-  static RcChannel* s_instances[2];
+  // For switches: 0 = low (~1000 us), 1 = middle (~1500 us),
+  // 2 = high (~2000 us), or -1 if there is no signal.
+  // A 2-position switch only ever returns 0 or 2.
+  int switchPosition() const;
 
+  // Called from the interrupt handlers (not for normal use).
+  void onEdge(bool pinIsHigh);
+
+private:
   const uint8_t pin_;
   volatile unsigned long riseUs_      = 0;
   volatile uint16_t      widthUs_     = 0;

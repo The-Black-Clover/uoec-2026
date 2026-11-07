@@ -14,6 +14,20 @@ namespace {
     }
   }
 
+  void printSwitch(const __FlashStringHelper* name, const RcChannel& ch) {
+    Serial.print(name);
+    int pos = ch.switchPosition();
+    if (pos < 0) {
+      Serial.print(F("NO SIGNAL   "));
+    } else {
+      Serial.print(F("pos "));
+      Serial.print(pos);
+      Serial.print(F(" ("));
+      Serial.print(ch.pulseUs());
+      Serial.print(F(" us)   "));
+    }
+  }
+
   void runStep(Motor& motor, int speed, const __FlashStringHelper* label) {
     Serial.println(label);
     motor.set(speed);
@@ -23,15 +37,19 @@ namespace {
   }
 }
 
-void Tests::receiver(const RcChannel& steer, const RcChannel& throttle) {
-  // Expect ~1000 / ~1500 / ~2000 us. "NO SIGNAL" = transmitter off,
-  // receiver not bound, or a loose wire.
+void Tests::receiver(const RcChannel& steer, const RcChannel& throttle,
+                     const RcChannel& arm, const RcChannel& speed) {
+  // Sticks: expect ~1000 / ~1500 / ~2000 us.
+  // Switches: SwA should give pos 0 / 2, SwC pos 0 / 1 / 2.
+  // "NO SIGNAL" = transmitter off, receiver not bound, or a loose wire.
   static unsigned long lastPrint = 0;
   if (millis() - lastPrint < 100) return;
   lastPrint = millis();
 
   printChannel(F("CH1 steer: "), steer);
   printChannel(F("CH2 throttle: "), throttle);
+  printSwitch(F("CH5 arm: "), arm);
+  printSwitch(F("CH6 speed: "), speed);
   Serial.println();
 }
 
